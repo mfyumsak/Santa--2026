@@ -4,7 +4,7 @@
 using namespace std;
 typedef long long ll; typedef __int128 LL;
 struct Ins { char op; ll a, b, r; };
-static ll LIMIT; static int MAXD = 3;
+static ll LIMIT; static int MAXD = 3; static int MODE = 1;
 static inline bool apply(char op, ll x, ll y, ll &r) {
     LL v;
     switch (op) {
@@ -229,10 +229,93 @@ int improve(Puzzle& P, mt19937& rng) {
     P.prog = prog; return gained;
 }
 
+
+// İki düğüm (u, v) için ortak yeni ara değer h: h = A op A, u = f(A_u ∪ {h}), v = g(A_v ∪ {h}).
+// Maliyet 3 talimat; eski maliyet cost_u + cost_v.
+struct NodeInfo { int idx; int cost; vector<char> inC; unordered_set<ll> As; vector<ll> A; unordered_map<ll, Ins> H; };
+static void invAll(ll t0, ll a, vector<pair<ll,Ins>>& out) {
+    LL v;
+    v = (LL)t0 - a; if (v > 0) out.push_back({(ll)v, {'+', (ll)v, a, t0}});
+    v = (LL)t0 + a; if (v <= LIMIT) out.push_back({(ll)v, {'-', (ll)v, a, t0}});
+    v = (LL)a - t0; if (v > 0) out.push_back({(ll)v, {'-', a, (ll)v, t0}});
+    if (t0 % a == 0) out.push_back({t0 / a, {'*', t0 / a, a, t0}});
+    v = (LL)t0 * a; if (v <= LIMIT) out.push_back({(ll)v, {'/', (ll)v, a, t0}});
+    if (a % t0 == 0) out.push_back({a / t0, {'/', a, a / t0, t0}});
+}
+int pairshare(Puzzle& P, mt19937& rng) {
+    LIMIT = P.limit;
+    vector<Ins> prog = clean(P.prog, P.start, P.targets);
+    int gained = (int)P.prog.size() - (int)prog.size();
+    unordered_set<ll> targS(P.targets.begin(), P.targets.end());
+    bool any = true;
+    while (any) {
+        any = false;
+        int n = prog.size();
+        unordered_map<ll,int> pos; for (int i = 0; i < n; i++) pos[prog[i].r] = i;
+        vector<vector<int>> cons(n);
+        for (int i = 0; i < n; i++) for (ll v : {prog[i].a, prog[i].b}) { auto it = pos.find(v); if (it != pos.end() && (cons[it->second].empty() || cons[it->second].back() != i)) cons[it->second].push_back(i); }
+        vector<NodeInfo> N(n);
+        for (int vi = 0; vi < n; vi++) {
+            NodeInfo& X = N[vi]; X.idx = vi; X.inC.assign(n, 0); X.inC[vi] = 1; int c = 1;
+            for (int i = vi - 1; i >= 0; i--) {
+                if (targS.count(prog[i].r)) continue;
+                bool allIn = !cons[i].empty();
+                for (int cc : cons[i]) if (!X.inC[cc]) { allIn = false; break; }
+                if (allIn) { X.inC[i] = 1; c++; }
+            }
+            X.cost = c;
+            vector<char> desc(n, 0); desc[vi] = 1;
+            for (int i = vi + 1; i < n; i++) for (ll v : {prog[i].a, prog[i].b}) { auto it = pos.find(v); if (it != pos.end() && desc[it->second]) { desc[i] = 1; break; } }
+            X.A.assign(P.start.begin(), P.start.end());
+            for (int i = 0; i < n; i++) if (!X.inC[i] && !desc[i]) X.A.push_back(prog[i].r);
+            sort(X.A.begin(), X.A.end()); X.A.erase(unique(X.A.begin(), X.A.end()), X.A.end());
+            X.As = unordered_set<ll>(X.A.begin(), X.A.end());
+            ll t = prog[vi].r;
+            vector<pair<ll,Ins>> cand;
+            for (ll a : X.A) invAll(t, a, cand);
+            if (t % 2 == 0) cand.push_back({t / 2, {'+', t / 2, t / 2, t}});
+            { ll r = (ll)sqrtl((long double)t); for (ll q = max(1LL, r - 1); q <= r + 1; q++) if ((LL)q * q == t) cand.push_back({q, {'*', q, q, t}}); }
+            for (auto& [h, ins] : cand) if (!X.As.count(h) && !X.H.count(h)) X.H[h] = ins;
+        }
+        vector<int> order(n); iota(order.begin(), order.end(), 0); shuffle(order.begin(), order.end(), rng);
+        for (int ui : order) {
+            for (int vi = 0; vi < n && !any; vi++) {
+                if (vi == ui) continue;
+                NodeInfo &U = N[ui], &V = N[vi];
+                if (U.cost + V.cost < 4) continue;
+                if (U.inC[vi] || V.inC[ui]) continue;
+                const NodeInfo &S = U.H.size() < V.H.size() ? U : V, &L = U.H.size() < V.H.size() ? V : U;
+                for (auto& [h, insS] : S.H) {
+                    auto it = L.H.find(h); if (it == L.H.end()) continue;
+                    // h = a op b, a,b ∈ A_u ∩ A_v
+                    Ins hi; bool ok = false;
+                    vector<pair<ll,Ins>> c2;
+                    for (ll a : U.A) { if (!V.As.count(a)) continue; c2.clear(); invAll(h, a, c2);
+                        for (auto& [b, ins] : c2) if (U.As.count(b) && V.As.count(b)) { hi = ins; ok = true; break; }
+                        if (ok) break; }
+                    if (!ok) continue;
+                    vector<pair<double,Ins>> items;
+                    for (int i = 0; i < n; i++) if (!U.inC[i] && !V.inC[i]) items.push_back({(double)i, prog[i]});
+                    items.push_back({min(ui, vi) - 0.6, hi});
+                    items.push_back({ui - 0.4, U.H.at(h)});
+                    items.push_back({vi - 0.4, V.H.at(h)});
+                    vector<Ins> np;
+                    if (!topo(items, P.start, np)) continue;
+                    np = clean(np, P.start, P.targets);
+                    if (np.size() >= prog.size() || !fits(np, P.start)) continue;
+                    gained += prog.size() - np.size(); prog = np; any = true; break;
+                }
+            }
+            if (any) break;
+        }
+    }
+    P.prog = prog; return gained;
+}
+
 int main(int argc, char** argv) {
     ios::sync_with_stdio(false);
     ifstream in(argv[1]); ofstream out(argv[2]);
-    int seed = argc > 3 ? atoi(argv[3]) : 1; if (argc > 4) MAXD = atoi(argv[4]);
+    int seed = argc > 3 ? atoi(argv[3]) : 1; if (argc > 4) MAXD = atoi(argv[4]); if (argc > 5) MODE = atoi(argv[5]);
     vector<Puzzle> Ps; string id;
     while (in >> id) {
         Puzzle P; P.id = id; int k, nt, n; in >> P.limit >> k >> nt >> n;
@@ -245,7 +328,7 @@ int main(int argc, char** argv) {
     #pragma omp parallel for schedule(dynamic) reduction(+:total)
     for (int i = 0; i < (int)Ps.size(); i++) {
         mt19937 rng(seed * 1000003 + i);
-        total += improve(Ps[i], rng);
+        int g = 0; int prev; do { prev = g; if (MODE != 2) g += improve(Ps[i], rng); if (MODE != 1) g += pairshare(Ps[i], rng); } while (MODE == 3 && g > prev); total += g;
     }
     for (auto& P : Ps) {
         out << P.id << " " << P.prog.size() << "\n";

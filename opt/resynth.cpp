@@ -174,6 +174,39 @@ bool synth(ll t, const vector<ll>& A, int maxd, vector<Ins>& res) {
             }
         }
     }
+    // derinlik 4 zincir: t = ((x op a) op b) op c, x ∈ P1 — geriye iki adım (B2), ileriye bir adım
+    {
+        struct BE { ll w; Ins s2, s3; };
+        vector<BE> B2;
+        for (ll c : A) {
+            ll c1[6]; char o1[6]; bool l1[6]; int n1 = inv(t, c, c1, o1, l1);
+            for (int i = 0; i < n1; i++) {
+                ll y = c1[i]; if (inA(y) || P1.count(y)) continue;
+                Ins s3 = l1[i] ? Ins{o1[i], y, c, t} : Ins{o1[i], c, y, t};
+                for (ll b : A) {
+                    ll c2[6]; char o2[6]; bool l2[6]; int n2 = inv(y, b, c2, o2, l2);
+                    for (int j = 0; j < n2; j++) {
+                        ll w = c2[j]; if (inA(w)) continue;
+                        Ins s2 = l2[j] ? Ins{o2[j], w, b, y} : Ins{o2[j], b, w, y};
+                        B2.push_back({w, s2, s3});
+                    }
+                }
+            }
+        }
+        // açık adresleme tablo
+        size_t cap = 1; while (cap < B2.size() * 2 + 16) cap <<= 1;
+        vector<ll> key(cap, 0); vector<int> idx(cap, -1);
+        auto slot = [&](ll v) { uint64_t h = (uint64_t)v * 0x9e3779b97f4a7c15ULL; h ^= h >> 31; return (size_t)(h & (cap - 1)); };
+        for (int k = 0; k < (int)B2.size(); k++) { size_t i = slot(B2[k].w); while (key[i] && key[i] != B2[k].w) i = (i + 1) & (cap - 1); if (!key[i]) { key[i] = B2[k].w; idx[i] = k; } }
+        auto get = [&](ll v)->int { size_t i = slot(v); while (key[i]) { if (key[i] == v) return idx[i]; i = (i + 1) & (cap - 1); } return -1; };
+        for (auto& [x, ix] : P1) {
+            for (ll a : A) for (char op : OPS) {
+                ll w;
+                if (apply(op, x, a, w)) { int k = get(w); if (k >= 0) { res = {ix, {op, x, a, w}, B2[k].s2, B2[k].s3}; return true; } }
+                if ((op == '-' || op == '/') && apply(op, a, x, w)) { int k = get(w); if (k >= 0) { res = {ix, {op, a, x, w}, B2[k].s2, B2[k].s3}; return true; } }
+            }
+        }
+    }
     return false;
 }
 

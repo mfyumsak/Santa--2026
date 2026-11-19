@@ -25,3 +25,4 @@
 - Hedef başına özel koni boyutu (public en iyi): 1:7780 2:6983 3:5038 4:3139 5:2191 6:1098 7:490 8:178.
 - 2026-11-19: güncel public çıktılar + resynth → submission_best.csv = 138,455 (Kaggle teyitli, sıra 104/1072). Lider 130,820.
 - Maliyet yapısı: ilk hedef ≈20.6 talimat (sabit kurulumu), sonraki hedefler ≈4.35. Bit boyuna göre: 40-bit 4.72/hedef, 50-bit 5.37, 60-bit 7.55.
+- beam/tony_solver.cpp: Tony Li beam çözücüsü (Apache 2.0), palet/yaprak parametreli. Tek çalıştırma (varsayılan) 20 bulmacada 3293 vs en iyi 2374 → palet varyasyonu tek başına umut vermiyor.

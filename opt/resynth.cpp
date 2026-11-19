@@ -394,6 +394,67 @@ int pairshare(Puzzle& P, mt19937& rng) {
     P.prog = prog; return gained;
 }
 
+// Paylaşılan düğümü kaldır ve tüketicilerini yeniden kur.
+int sharedrm(Puzzle& P, mt19937& rng) {
+    LIMIT = P.limit;
+    vector<Ins> prog = clean(P.prog, P.start, P.targets);
+    int gained = (int)P.prog.size() - (int)prog.size();
+    unordered_set<ll> targS(P.targets.begin(), P.targets.end());
+    bool any = true;
+    while (any) {
+        any = false;
+        int n = prog.size();
+        unordered_map<ll,int> pos; for (int i = 0; i < n; i++) pos[prog[i].r] = i;
+        vector<vector<int>> cons(n);
+        for (int i = 0; i < n; i++) for (ll v : {prog[i].a, prog[i].b}) { auto it = pos.find(v); if (it != pos.end() && (cons[it->second].empty() || cons[it->second].back() != i)) cons[it->second].push_back(i); }
+        auto privcone = [&](int vi, vector<char>& inC, const vector<char>& extra) {
+            // extra: zaten silinecek düğümler (tüketici sayılır)
+            for (int i = vi - 1; i >= 0; i--) {
+                if (inC[i] || targS.count(prog[i].r)) continue;
+                bool allIn = !cons[i].empty();
+                for (int c : cons[i]) if (!inC[c] && !extra[c]) { allIn = false; break; }
+                if (allIn) inC[i] = 1;
+            }
+        };
+        vector<int> order(n); iota(order.begin(), order.end(), 0); shuffle(order.begin(), order.end(), rng);
+        for (int vi : order) {
+            if (targS.count(prog[vi].r) || cons[vi].size() < 2 || cons[vi].size() > 4) continue;
+            vector<char> del(n, 0), none(n, 0); del[vi] = 1;
+            for (int w : cons[vi]) del[w] = 1;
+            privcone(vi, del, none);
+            for (int w : cons[vi]) privcone(w, del, none);
+            int budget = 0; for (int i = 0; i < n; i++) budget += del[i];
+            // tüketicileri yeniden kur (indeks sırasıyla)
+            vector<int> ws = cons[vi]; sort(ws.begin(), ws.end());
+            vector<pair<double,Ins>> added; int newc = 0; bool ok = true;
+            for (int w : ws) {
+                if (newc + (int)(ws.size()) > budget - 1) { ok = false; break; }
+                vector<char> desc(n, 0); desc[w] = 1;
+                for (int i = w + 1; i < n; i++) for (ll v : {prog[i].a, prog[i].b}) { auto it = pos.find(v); if (it != pos.end() && desc[it->second]) { desc[i] = 1; break; } }
+                vector<ll> A(P.start.begin(), P.start.end());
+                for (int i = 0; i < n; i++) if (!del[i] && !desc[i]) A.push_back(prog[i].r);
+                for (auto& [k, ins] : added) A.push_back(ins.r);
+                sort(A.begin(), A.end()); A.erase(unique(A.begin(), A.end()), A.end());
+                int room = budget - 1 - newc - ((int)ws.size() - 1 - (int)(lower_bound(ws.begin(), ws.end(), w) - ws.begin()));
+                vector<Ins> rep;
+                if (room < 1 || !synth(prog[w].r, A, min(room, MAXD), rep)) { ok = false; break; }
+                newc += rep.size();
+                for (int k = 0; k < (int)rep.size(); k++) added.push_back({w - 0.5 + 0.01 * k, rep[k]});
+            }
+            if (!ok || newc >= budget) continue;
+            vector<pair<double,Ins>> items;
+            for (int i = 0; i < n; i++) if (!del[i]) items.push_back({(double)i, prog[i]});
+            for (auto& x : added) items.push_back(x);
+            vector<Ins> np;
+            if (!topo(items, P.start, np)) continue;
+            np = clean(np, P.start, P.targets);
+            if (np.size() >= prog.size() || !fits(np, P.start)) continue;
+            gained += prog.size() - np.size(); prog = np; any = true; break;
+        }
+    }
+    P.prog = prog; return gained;
+}
+
 int main(int argc, char** argv) {
     ios::sync_with_stdio(false);
     ifstream in(argv[1]); ofstream out(argv[2]);
@@ -410,7 +471,7 @@ int main(int argc, char** argv) {
     #pragma omp parallel for schedule(dynamic) reduction(+:total)
     for (int i = 0; i < (int)Ps.size(); i++) {
         mt19937 rng(seed * 1000003 + i);
-        int g = 0; int prev; do { prev = g; if (MODE != 2) g += improve(Ps[i], rng); if (MODE != 1) g += pairshare(Ps[i], rng); } while (MODE == 3 && g > prev); total += g;
+        int g = 0; int prev; do { prev = g; if (MODE == 4) { g += sharedrm(Ps[i], rng); } else { if (MODE != 2) g += improve(Ps[i], rng); if (MODE != 1) g += pairshare(Ps[i], rng); } } while (MODE == 3 && g > prev); total += g;
     }
     for (auto& P : Ps) {
         out << P.id << " " << P.prog.size() << "\n";

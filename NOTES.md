@@ -28,3 +28,5 @@
 - beam/tony_solver.cpp: Tony Li beam çözücüsü (Apache 2.0), palet/yaprak parametreli. Tek çalıştırma (varsayılan) 20 bulmacada 3293 vs en iyi 2374 → palet varyasyonu tek başına umut vermiyor.
 - resynth derinlik 5-6 kofaktör araması (t = q*B ± c): birim testte doğru çalışıyor (63→5), ama 24 zor public bulmacada 0 kazanç. Public programlar tek-hedef yerel hamlelerde tükenmiş durumda.
 - Hard puzzle yapısı: hedefler genelde t = X*Y ± küçük, X ve Y orta boy (20–40 bit) ve çok kez paylaşılan ara değerler.
+- Paylaşılan düğüm sökme (sharedrm, MODE 4): v3'te +221/20 bulmaca, public'te 0 (derinlik 3 ve 4).
+- Alıştırma hedeflerinde gizli ortak çarpan yok (ofset ±40 ile gcd ~ rastgele seviye), sadece shared/multiplicative ailelerde t≈k·u ilişkisi.

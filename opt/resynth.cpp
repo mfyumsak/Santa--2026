@@ -207,6 +207,55 @@ bool synth(ll t, const vector<ll>& A, int maxd, vector<Ins>& res) {
             }
         }
     }
+    if (maxd < 5) return false;
+    // derinlik 5-6 kofaktör: t = q * B ± c (c ∈ A ya da 0), B ∈ A ∪ P1, q 2 (veya 3) talimatla
+    {
+        vector<pair<ll,Ins>> Bs; // B ve (P1 ise) tarifi
+        for (ll b : A) if (b > 1) Bs.push_back({b, Ins{0,0,0,0}});
+        for (auto& [x, ix] : P1) if (x > 1) Bs.push_back({x, ix});
+        // q'yu 2 talimatla kur: q = x op a (x ∈ P1, a ∈ A) ya da x op x
+        auto q2 = [&](ll q, vector<Ins>& out)->bool {
+            if (P1.count(q) || inA(q)) return false; // daha kısa, başka yerde yakalanır
+            for (ll a : A) {
+                ll c[6]; char o[6]; bool l[6]; int nc = inv(q, a, c, o, l);
+                for (int j = 0; j < nc; j++) { auto it = P1.find(c[j]); if (it != P1.end()) { ll x = it->first; out = {it->second, l[j] ? Ins{o[j], x, a, q} : Ins{o[j], a, x, q}}; return true; } }
+            }
+            return false;
+        };
+        auto q3 = [&](ll q, vector<Ins>& out)->bool { // q = x op y, x,y ∈ P1
+            for (auto& [x, ix] : P1) {
+                ll c[6]; char o[6]; bool l[6]; int nc = inv(q, x, c, o, l);
+                for (int j = 0; j < nc; j++) { auto it = P1.find(c[j]); if (it != P1.end() && it->first != x) { ll y = it->first; out = {ix, it->second, l[j] ? Ins{o[j], y, x, q} : Ins{o[j], x, y, q}}; return true; } }
+            }
+            return false;
+        };
+        int bestc = 1 << 30; vector<Ins> bestres;
+        vector<pair<ll,Ins>> us; // u = t ∓ c ve son adım
+        us.push_back({t, Ins{0,0,0,0}});
+        for (ll c : A) {
+            LL v = (LL)t - c; if (v > 0) us.push_back({(ll)v, Ins{'+', 0, c, t}});
+            v = (LL)t + c; if (v <= LIMIT) us.push_back({(ll)v, Ins{'-', 0, c, t}});
+        }
+        for (auto& [u, last] : us) {
+            for (auto& [B, ib] : Bs) {
+                if (B >= u || u % B) continue;
+                ll q = u / B;
+                int base = (ib.op ? 1 : 0) + 1 + (last.op ? 1 : 0);
+                vector<Ins> qi;
+                int qc = 99;
+                if (base + 2 < bestc && base + 2 <= maxd && q2(q, qi)) qc = 2;
+                else if (maxd >= 6 && base + 3 < bestc && base + 3 <= maxd && q3(q, qi)) qc = 3;
+                if (qc == 99) continue;
+                vector<Ins> r;
+                if (ib.op) r.push_back(ib);
+                for (auto& z : qi) r.push_back(z);
+                r.push_back({'*', q, B, u});
+                if (last.op) r.push_back({last.op, u, last.b, t});
+                if ((int)r.size() < bestc) { bestc = r.size(); bestres = r; }
+            }
+        }
+        if (!bestres.empty()) { res = bestres; return true; }
+    }
     return false;
 }
 

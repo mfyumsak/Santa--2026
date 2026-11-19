@@ -21,3 +21,5 @@
 - Alıştırma analizi: shared/mixed ailelerinde hedefler ≈ önceki_hedef*küçük + küçük_fark; independent'ta ilişki yok → güçlü arama (MITM) gerek.
 - Kaggle CLI çalışıyor (anahtar sadece ~/.kaggle'da, proje klasöründe DEĞİL). merge.py: doğrulanmış submission'ları bulmaca bazında birleştirir.
 - Public notebook çıktıları + v3 birleşimi: 138,557 (Kaggle'da teyitli), sıra 113/1045. Lider 130,845.
+- opt/resynth.cpp: özel koni (private cone) yeniden sentezi, derinlik ≤4 (MITM). Bizim v3'te büyük kazanç; public portföyde derinlik 3'te 0, derinlik 4'te ~0.05/bulmaca. Public programlar yerel olarak çok cilalı.
+- Hedef başına özel koni boyutu (public en iyi): 1:7780 2:6983 3:5038 4:3139 5:2191 6:1098 7:490 8:178.

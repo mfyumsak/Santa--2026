@@ -17,3 +17,7 @@
 - v2 (solve_v2.py + beam.py): sabitler 1..24 + asallar ~113'e kadar register'da; her hedef beam search ile t=q*m±d → 244,583 (≈9.1/hedef). 16 bulmacada fallback baseline.
 - v3 (solve_v3.py): bulmaca başına 5 sabit kümesi dene, en iyiyi al → 236,654.
 - Sonraki fikirler: sabit kümesini bulmaca başına optimize etmek, önceki hedefleri/ara değerleri yeniden kullanmak, C++ ile daha geniş arama.
+- Kaggle LB (2026-11-19): v2 = 244,583 (lokal ile aynı). Lider ≈130,845 (≈4.9/hedef).
+- Alıştırma analizi: shared/mixed ailelerinde hedefler ≈ önceki_hedef*küçük + küçük_fark; independent'ta ilişki yok → güçlü arama (MITM) gerek.
+- Kaggle CLI çalışıyor (anahtar sadece ~/.kaggle'da, proje klasöründe DEĞİL). merge.py: doğrulanmış submission'ları bulmaca bazında birleştirir.
+- Public notebook çıktıları + v3 birleşimi: 138,557 (Kaggle'da teyitli), sıra 113/1045. Lider 130,845.

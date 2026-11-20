@@ -1,10 +1,11 @@
+#include <atomic>
 // Zincir yeniden sentezi: her düğümün özel konisini (yalnızca ona hizmet eden ara değerler)
 // 1-3 talimatlık daha kısa bir ifadeyle değiştirmeye çalışır. Girdi/çıktı: değer seviyesinde program.
 #include <bits/stdc++.h>
 using namespace std;
 typedef long long ll; typedef __int128 LL;
 struct Ins { char op; ll a, b, r; };
-static ll LIMIT; static int MAXD = 3; static int MODE = 1;
+static ll LIMIT; static int MAXD = 3; static int MODE = 1; static std::atomic<long> FITREJ{0}, FITGAIN{0};
 static inline bool apply(char op, ll x, ll y, ll &r) {
     LL v;
     switch (op) {
@@ -304,7 +305,8 @@ int improve(Puzzle& P, mt19937& rng) {
             vector<Ins> np;
             if (!topo(items, P.start, np)) continue;
             np = clean(np, P.start, P.targets);
-            if (np.size() >= prog.size() || !fits(np, P.start)) continue;
+            if (np.size() >= prog.size()) continue;
+            if (!fits(np, P.start)) { FITREJ++; FITGAIN += prog.size() - np.size(); continue; }
             gained += prog.size() - np.size(); prog = np; any = true; break;
         }
     }
@@ -384,7 +386,8 @@ int pairshare(Puzzle& P, mt19937& rng) {
                     vector<Ins> np;
                     if (!topo(items, P.start, np)) continue;
                     np = clean(np, P.start, P.targets);
-                    if (np.size() >= prog.size() || !fits(np, P.start)) continue;
+                    if (np.size() >= prog.size()) continue;
+                    if (!fits(np, P.start)) { FITREJ++; FITGAIN += prog.size() - np.size(); continue; }
                     gained += prog.size() - np.size(); prog = np; any = true; break;
                 }
             }
@@ -448,7 +451,8 @@ int sharedrm(Puzzle& P, mt19937& rng) {
             vector<Ins> np;
             if (!topo(items, P.start, np)) continue;
             np = clean(np, P.start, P.targets);
-            if (np.size() >= prog.size() || !fits(np, P.start)) continue;
+            if (np.size() >= prog.size()) continue;
+            if (!fits(np, P.start)) { FITREJ++; FITGAIN += prog.size() - np.size(); continue; }
             gained += prog.size() - np.size(); prog = np; any = true; break;
         }
     }
@@ -477,5 +481,5 @@ int main(int argc, char** argv) {
         out << P.id << " " << P.prog.size() << "\n";
         for (auto& i : P.prog) out << i.op << " " << i.a << " " << i.b << " " << i.r << "\n";
     }
-    fprintf(stderr, "total gain %ld\n", total);
+    fprintf(stderr, "total gain %ld fit-rejected %ld (sum gain %ld)\n", total, (long)FITREJ, (long)FITGAIN);
 }

@@ -30,3 +30,5 @@
 - Hard puzzle yapısı: hedefler genelde t = X*Y ± küçük, X ve Y orta boy (20–40 bit) ve çok kez paylaşılan ara değerler.
 - Paylaşılan düğüm sökme (sharedrm, MODE 4): v3'te +221/20 bulmaca, public'te 0 (derinlik 3 ve 4).
 - Alıştırma hedeflerinde gizli ortak çarpan yok (ofset ±40 ile gcd ~ rastgele seviye), sadece shared/multiplicative ailelerde t≈k·u ilişkisi.
+- 2026-11-20: Register baskısı: en iyi programların 403'ünde max canlı değer 44–48; bunlar en pahalı bulmacalar (50-bit: 6.75 vs 3.93 /hedef). Toplam ~78k talimat. Georgy (discussion): >48 canlı planlar ~%9 kısa. Yerel hamleler sınırsız register'da bile 0 → kazanç üretici (planner+scheduler) aşamasında.
+- Otomatik hat 2026-11-20 09:08 UTC: 135,442 (sıra 180/1718, lider 128,831).

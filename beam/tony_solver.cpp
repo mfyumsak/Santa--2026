@@ -447,6 +447,7 @@ struct Puzzle {
                 uses[b].pop_back();
             emit(emit, v, 0);
         }
+        cerr << "PLAN " << sequence.size() << " PROG " << program.size() << "\n";
         return program;
     }
 };

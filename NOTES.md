@@ -39,3 +39,4 @@
   - 20 zor: Tony sıralı 5362 → Hcub v1 K3 5057 (en iyi 4336, +%16.6). Geniş beam (20) 5059, yerel resynth d4 sonrası daha kötü (zamanlama bozuluyor).
   - 40 karışık (her 25. bulmaca): Tony 7109 (+%27.4), Hcub v1 K3 6768 (+%21.3), Hcub v2 (paylaşım+tembel) K3 6586 (+%18.0), v1'in 16 ayarlı portföyü 6545 (+%17.3, eğri düzleşiyor). Hiçbir bulmacada en iyiyi geçmedi.
   - Sonuç: Hcub sırası/paylaşımı tek çalıştırmada ~%7 kazandırıyor ama en iyiye olan ~%17'lik açık hedef başına arama kalitesinden (public'in yoğun yeniden yazma yığını) geliyor; birleştirmeye katkı 0.
+- Otomatik hat 2026-11-20 15:20 UTC: 134,190 (sıra ~161/1841, lider 128,330).

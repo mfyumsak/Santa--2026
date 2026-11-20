@@ -40,3 +40,4 @@
   - 40 karışık (her 25. bulmaca): Tony 7109 (+%27.4), Hcub v1 K3 6768 (+%21.3), Hcub v2 (paylaşım+tembel) K3 6586 (+%18.0), v1'in 16 ayarlı portföyü 6545 (+%17.3, eğri düzleşiyor). Hiçbir bulmacada en iyiyi geçmedi.
   - Sonuç: Hcub sırası/paylaşımı tek çalıştırmada ~%7 kazandırıyor ama en iyiye olan ~%17'lik açık hedef başına arama kalitesinden (public'in yoğun yeniden yazma yığını) geliyor; birleştirmeye katkı 0.
 - Otomatik hat 2026-11-20 15:20 UTC: 134,190 (sıra ~161/1841, lider 128,330).
+- Otomatik hat 2026-11-20 19:48 UTC: 133,933 (sıra 158/1914, lider 128,330).

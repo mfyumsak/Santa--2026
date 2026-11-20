@@ -73,7 +73,7 @@ struct Index {
 
 struct Dictionary {
     Int limit;
-    Index index{20};
+    Index index{24};
     vector<Expr> e;
     array<vector<pair<Int, int>>, 3> sorted;
     int n0 = 0, n1 = 0;
@@ -387,6 +387,18 @@ struct Puzzle {
             done.insert(target);
         }
     }
+    vector<Int> plan_sequence() {
+        set<Int> placed(starts.begin(), starts.end());
+        vector<Int> sequence;
+        auto visit = [&](auto &&self, Int v) -> void {
+            if (!placed.insert(v).second) return;
+            auto [a, b] = args.at(v);
+            self(self, a); self(self, b);
+            sequence.push_back(v);
+        };
+        for (Int t : targets) visit(visit, t);
+        return sequence;
+    }
     // Walk dependencies on demand, then allocate registers by their next use.
     // An evicted value can always be rebuilt from its expression or a protected seed.
     vector<array<int, 4>> compile() {
@@ -471,6 +483,17 @@ int main(int argc, char **argv) {
         for (auto &x : p.targets)
             cin >> x;
         p.solve();
+        if (argc > 7 && string(argv[7]) == "plan") {
+            auto seq = p.plan_sequence();
+            cout << id << " " << limit << " " << ns << " " << nt << " " << seq.size() << "\n";
+            for (size_t k = 0; k < p.starts.size(); k++) cout << (k ? " " : "") << p.starts[k];
+            cout << "\n";
+            for (size_t k = 0; k < p.targets.size(); k++) cout << (k ? " " : "") << p.targets[k];
+            cout << "\n";
+            for (Int v : seq) { auto [a, b] = p.args.at(v); cout << char(p.defs.at(v).op) << " " << a << " " << b << " " << v << "\n"; }
+            cout << flush;
+            continue;
+        }
         auto prog = p.compile();
         cout << id << " [";
         for (size_t k = 0; k < prog.size(); k++) {

@@ -32,3 +32,5 @@
 - Alıştırma hedeflerinde gizli ortak çarpan yok (ofset ±40 ile gcd ~ rastgele seviye), sadece shared/multiplicative ailelerde t≈k·u ilişkisi.
 - 2026-11-20: Register baskısı: en iyi programların 403'ünde max canlı değer 44–48; bunlar en pahalı bulmacalar (50-bit: 6.75 vs 3.93 /hedef). Toplam ~78k talimat. Georgy (discussion): >48 canlı planlar ~%9 kısa. Yerel hamleler sınırsız register'da bile 0 → kazanç üretici (planner+scheduler) aşamasında.
 - Otomatik hat 2026-11-20 09:08 UTC: 135,442 (sıra 180/1718, lider 128,831).
+- sched/sched.py: plan→48 register zamanlayıcı (Belady + maliyet-duyarlı yeniden hesaplama, COSTPOW=2). En zor 20 bulmacada Tony derleyicisinden iyi: 88 yaprak 5834→5362, 130 yaprak 5777→5471. Ama ham programlar en iyiden bulmaca başına +25..+88 kötü (public yeniden yazma yığını ~%25 kazandırıyor).
+- resynth donor modu (argv[6] bağışçı dosyası, MAXD=0): 185 public CSV'den tarif nakli → en iyide 0 kazanç (v3'te 307).

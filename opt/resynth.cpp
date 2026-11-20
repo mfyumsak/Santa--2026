@@ -1,3 +1,4 @@
+#include <functional>
 #include <atomic>
 // Zincir yeniden sentezi: her düğümün özel konisini (yalnızca ona hizmet eden ara değerler)
 // 1-3 talimatlık daha kısa bir ifadeyle değiştirmeye çalışır. Girdi/çıktı: değer seviyesinde program.
@@ -5,7 +6,7 @@
 using namespace std;
 typedef long long ll; typedef __int128 LL;
 struct Ins { char op; ll a, b, r; };
-static ll LIMIT; static int MAXD = 3; static int MODE = 1; static std::atomic<long> FITREJ{0}, FITGAIN{0};
+static ll LIMIT; static int MAXD = 3; static int MODE = 1; static int G_REGS = getenv("GREGS") ? atoi(getenv("GREGS")) : 48; static std::atomic<long> FITREJ{0}, FITGAIN{0};
 static inline bool apply(char op, ll x, ll y, ll &r) {
     LL v;
     switch (op) {
@@ -38,12 +39,12 @@ bool fits(const vector<Ins>& p, const vector<ll>& start) {
     for (int i = 0; i < (int)p.size(); i++) { last[p[i].a] = i; last[p[i].b] = i; }
     int live = 0; unordered_set<ll> s;
     for (ll v : start) if (last.count(v) && s.insert(v).second) live++;
-    if (live > 48) return false;
+    if (live > G_REGS) return false;
     for (int i = 0; i < (int)p.size(); i++) {
         int dying = 0;
         for (ll v : {p[i].a, p[i].b}) if (last[v] == i && s.erase(v)) dying++;
         live -= dying;
-        if (live + 1 > 48) return false;
+        if (live + 1 > G_REGS) return false;
         if (last.count(p[i].r) && last[p[i].r] > i && s.insert(p[i].r).second) live++;
     }
     return true;
@@ -260,6 +261,41 @@ bool synth(ll t, const vector<ll>& A, int maxd, vector<Ins>& res) {
     return false;
 }
 
+
+// Bağışçı tarifleri: diğer programlardan değer -> tarif listesi (bulmaca başına)
+static unordered_map<string, unordered_map<ll, vector<Ins>>> DONOR;
+// v'yi A'dan bağışçı tarifleriyle kur; en ucuz (ağaç maliyeti) tarifi seç, gerçek talimat kümesini döndür.
+static bool donorBuild(const unordered_map<ll, vector<Ins>>& D, ll t, const unordered_set<ll>& As, int budget, vector<Ins>& out) {
+    unordered_map<ll, int> memo; unordered_map<ll, int> choice; unordered_set<ll> onstack;
+    function<int(ll, int)> cost = [&](ll v, int depth) -> int {
+        if (As.count(v)) return 0;
+        auto m = memo.find(v); if (m != memo.end()) return m->second;
+        if (depth > 12 || onstack.count(v)) return 1 << 20;
+        auto it = D.find(v); if (it == D.end()) return 1 << 20;
+        onstack.insert(v);
+        int best = 1 << 20, bi = -1;
+        for (int k = 0; k < (int)it->second.size(); k++) {
+            const Ins& r = it->second[k];
+            int c = 1 + cost(r.a, depth + 1); if (c >= best) continue;
+            c += (r.b == r.a) ? 0 : cost(r.b, depth + 1);
+            if (c < best) { best = c; bi = k; }
+        }
+        onstack.erase(v);
+        memo[v] = best; choice[v] = bi; return best;
+    };
+    int c = cost(t, 0);
+    if (c >= budget) return false;
+    // kurulum (paylaşılan alt değerler bir kez)
+    unordered_set<ll> done; out.clear();
+    function<void(ll)> emit = [&](ll v) {
+        if (As.count(v) || done.count(v)) return;
+        const Ins& r = D.at(v)[choice.at(v)];
+        emit(r.a); emit(r.b); done.insert(v); out.push_back(r);
+    };
+    emit(t);
+    return (int)out.size() < budget;
+}
+
 int improve(Puzzle& P, mt19937& rng) {
     LIMIT = P.limit;
     vector<Ins> prog = clean(P.prog, P.start, P.targets);
@@ -296,7 +332,14 @@ int improve(Puzzle& P, mt19937& rng) {
             sort(A.begin(), A.end()); A.erase(unique(A.begin(), A.end()), A.end());
             if (A.size() > 400) continue;
             vector<Ins> rep;
-            if (!synth(prog[vi].r, A, min(cost - 1, MAXD), rep)) continue;
+            bool found = false;
+            auto dit = DONOR.find(P.id);
+            if (dit != DONOR.end()) {
+                unordered_set<ll> As(A.begin(), A.end());
+                found = donorBuild(dit->second, prog[vi].r, As, cost, rep);
+            }
+            if (!found && MAXD > 0 && !synth(prog[vi].r, A, min(cost - 1, MAXD), rep)) continue;
+            if (rep.empty()) continue;
             if ((int)rep.size() >= cost) continue;
             // yeni program
             vector<pair<double,Ins>> items;
@@ -470,6 +513,17 @@ int main(int argc, char** argv) {
         P.targets.resize(nt); for (auto& x : P.targets) in >> x;
         P.prog.resize(n); for (auto& i : P.prog) { string op; in >> op >> i.a >> i.b >> i.r; i.op = op[0]; }
         Ps.push_back(P);
+    }
+    if (argc > 6) {
+        ifstream dn(argv[6]); string did;
+        while (dn >> did) {
+            ll lim; int k, nt, n; dn >> lim >> k >> nt >> n;
+            for (int i = 0; i < k + nt; i++) { ll x; dn >> x; }
+            auto& M = DONOR[did];
+            for (int i = 0; i < n; i++) { string op; Ins r; dn >> op >> r.a >> r.b >> r.r; r.op = op[0];
+                auto& L = M[r.r]; bool dup = false; for (auto& q : L) if (q.op == r.op && q.a == r.a && q.b == r.b) dup = true; if (!dup) L.push_back(r); }
+        }
+        fprintf(stderr, "donor puzzles %zu\n", DONOR.size());
     }
     long total = 0;
     #pragma omp parallel for schedule(dynamic) reduction(+:total)

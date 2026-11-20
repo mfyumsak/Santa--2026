@@ -34,3 +34,4 @@
 - Otomatik hat 2026-11-20 09:08 UTC: 135,442 (sıra 180/1718, lider 128,831).
 - sched/sched.py: plan→48 register zamanlayıcı (Belady + maliyet-duyarlı yeniden hesaplama, COSTPOW=2). En zor 20 bulmacada Tony derleyicisinden iyi: 88 yaprak 5834→5362, 130 yaprak 5777→5471. Ama ham programlar en iyiden bulmaca başına +25..+88 kötü (public yeniden yazma yığını ~%25 kazandırıyor).
 - resynth donor modu (argv[6] bağışçı dosyası, MAXD=0): 185 public CSV'den tarif nakli → en iyide 0 kazanç (v3'te 307).
+- 2026-11-20 portföy denemesi: 20 zor bulmacada 10 ayar × (Tony beam + sched.py), bulmaca başına min = 5181 vs en iyi 4336 (+%19.5; her bulmacada +25..+58). Tek çalıştırmalar 5281–5553. Sonuç: bu yoldan en iyiye yaklaşılamıyor → araştırma durduruldu, sadece otomatik takip.

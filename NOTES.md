@@ -41,3 +41,4 @@
   - Sonuç: Hcub sırası/paylaşımı tek çalıştırmada ~%7 kazandırıyor ama en iyiye olan ~%17'lik açık hedef başına arama kalitesinden (public'in yoğun yeniden yazma yığını) geliyor; birleştirmeye katkı 0.
 - Otomatik hat 2026-11-20 15:20 UTC: 134,190 (sıra ~161/1841, lider 128,330).
 - Otomatik hat 2026-11-20 19:48 UTC: 133,933 (sıra 158/1914, lider 128,330).
+- Otomatik hat 2026-11-21 06:44 UTC: 132,890 (sıra 196/2032, lider 127,800).

@@ -43,3 +43,4 @@
 - Otomatik hat 2026-11-20 19:48 UTC: 133,933 (sıra 158/1914, lider 128,330).
 - Otomatik hat 2026-11-21 06:44 UTC: 132,890 (sıra 196/2032, lider 127,800).
 - Otomatik hat 2026-11-21 16:44 UTC: 132,376 (sıra 161/2183, lider 126,800). Kullanıcı isteğiyle günde iki kez (09:40 ve 19:40 İstanbul).
+- Otomatik hat 2026-11-22 06:44 UTC: 132,130 (sıra 205/2306, lider 126,659).

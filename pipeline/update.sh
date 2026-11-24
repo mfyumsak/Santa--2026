@@ -12,6 +12,8 @@ for k in $(cat refs.txt); do d=$(echo $k | tr / _); mkdir -p $d; timeout 120 kag
 # public dataset'ler (program paylaşılan dataset'ler, son güncellenenler)
 for q in "santa 2026" "santa-2026" "elf calculator"; do for pg in 1 2; do kaggle datasets list -s "$q" --sort-by updated --page $pg 2>/dev/null | awk 'NR>2{print $1}'; done; done | grep -iE "santa|elf" | grep -viE "squares|202[2-5]|leaderboard" | sort -u > dsrefs.txt
 for k in $(cat dsrefs.txt); do d=ds_$(echo $k | tr / _); mkdir -p $d; timeout 180 kaggle datasets download -d $k -p $d --unzip >/dev/null 2>&1 || true; done
+# kendi gizli Kaggle LNS çalıştırmamızın son tamamlanan çıktısı
+mkdir -p own_lns; timeout 300 kaggle kernels output mfurkanyumsak/santa2026-dag-lns-private -p own_lns >/dev/null 2>&1 || true
 cd $ROOT
 python3 merge.py data/puzzles.csv $W/merged.csv submission_best.csv $(find $W -name "*.csv" -size +100k ! -name merged.csv ! -name opt.csv) | sed 's/Counter.*//'
 python3 $REPO/opt/vio.py to data/puzzles.csv $W/merged.csv $W/m.txt

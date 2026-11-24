@@ -2,6 +2,9 @@
 # Gizli Kaggle LNS döngüsü: biten kernel(ler) için dataset'i güncel en iyiyle yeniler ve kerneli yeniden başlatır.
 # update.sh'den SONRA çalıştırılır (update.sh bitmiş kernellerin çıktısını zaten birleştirmiş olur).
 REPO=$(cd "$(dirname "$0")/.." && pwd)
+# 2026-11-24: ilk tam çalıştırma 9 saatte 5 tur x 1000 bulmaca, 0 iyileşme (public sınır bu motorla zaten cilalı).
+# Yeniden başlatma kapatıldı; açmak için LNS_CYCLE=1 verin.
+[ "${LNS_CYCLE:-0}" = 1 ] || { echo "LNS döngüsü kapalı (0 kazanç)"; exit 0; }
 DS=mfurkanyumsak/santa2026-best-programs
 declare -A DIRS=([santa2026-dag-lns-private]=kaggle_lns [santa2026-dag-lns-private-2]=kaggle_lns2)
 done_list=()

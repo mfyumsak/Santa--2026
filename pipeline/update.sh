@@ -6,8 +6,12 @@ ROOT=/mnt/project-files/santa2026
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 W=${WORK:-/tmp/santa_pub}; mkdir -p $W
 cd $W
-kaggle kernels list --competition santa-2026 --sort-by dateRun --page-size 60 2>/dev/null | awk 'NR>2{print $1}' > refs.txt
+# notebook çıktıları: en son çalışan 60 + oy/popülerlik sırasındakiler
+for s in dateRun voteCount hotness; do kaggle kernels list --competition santa-2026 --sort-by $s --page-size 60 2>/dev/null | awk 'NR>2{print $1}'; done | sort -u > refs.txt
 for k in $(cat refs.txt); do d=$(echo $k | tr / _); mkdir -p $d; timeout 120 kaggle kernels output $k -p $d >/dev/null 2>&1 || true; done
+# public dataset'ler (program paylaşılan dataset'ler, son güncellenenler)
+for q in "santa 2026" "santa-2026" "elf calculator"; do for pg in 1 2; do kaggle datasets list -s "$q" --sort-by updated --page $pg 2>/dev/null | awk 'NR>2{print $1}'; done; done | grep -iE "santa|elf" | grep -viE "squares|202[2-5]|leaderboard" | sort -u > dsrefs.txt
+for k in $(cat dsrefs.txt); do d=ds_$(echo $k | tr / _); mkdir -p $d; timeout 180 kaggle datasets download -d $k -p $d --unzip >/dev/null 2>&1 || true; done
 cd $ROOT
 python3 merge.py data/puzzles.csv $W/merged.csv submission_best.csv $(find $W -name "*.csv" -size +100k ! -name merged.csv ! -name opt.csv) | sed 's/Counter.*//'
 python3 $REPO/opt/vio.py to data/puzzles.csv $W/merged.csv $W/m.txt

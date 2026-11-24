@@ -8,8 +8,14 @@ def main(pz, out, *subs):
     P = {r["id"]: r for r in csv.DictReader(open(pz))}
     best, src = {}, {}
     for f in subs:
-        for r in csv.DictReader(open(f)):
-            if r["id"] not in P: continue
+        try:
+            rows = list(csv.DictReader(open(f, errors="replace")))
+        except Exception:
+            continue
+        if not rows or "id" not in rows[0] or "program" not in rows[0]:
+            continue  # submission biçiminde olmayan dosya
+        for r in rows:
+            if r["id"] not in P or not r["program"]: continue
             p = P[r["id"]]
             try: prog = json.loads(r["program"])
             except Exception: continue

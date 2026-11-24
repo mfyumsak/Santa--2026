@@ -47,3 +47,4 @@
 - Otomatik hat 2026-11-22 16:44 UTC: 131,026 (sıra 132/2421, lider 126,659).
 - Otomatik hat 2026-11-23 06:44 UTC: 130,196 (sıra 157/2537, lider 126,347).
 - Otomatik hat 2026-11-23 16:44 UTC: 128,507 (sıra 160/2681, lider 126,282).
+- Otomatik hat 2026-11-24 06:44 UTC: 128,491 (sadece +16; sıra 226/2787, lider 125,650). Son-60 listesi dışındaki 40 popüler notebook birleştirildi: 0 kazanç, hat bir şey kaçırmıyor.

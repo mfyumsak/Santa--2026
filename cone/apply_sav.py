@@ -13,6 +13,8 @@ EQ = int(os.environ.get('EQ_OK', '0'))
 STRAT = 0
 FITN = int(os.environ.get('FITN', '40'))
 FITT = int(os.environ.get('FITT', '6'))
+ANNEAL = int(os.environ.get('ANNEAL', '4'))
+ANNIT = int(os.environ.get('ANNIT', '20000'))
 
 def derive_all(v, S, L):
     res = []
@@ -107,6 +109,44 @@ def rev_sched(rec, order, st, R=48, jitter=0.0, rng=None, slack=2):
     if len(L) > R: return None
     return out[::-1]
 
+def overflow(rec, order, st, R=48):
+    last = {}
+    for i, v in enumerate(order):
+        op, a, b = rec[v]; last[a] = i; last[b] = i
+    live = sum(1 for v in set(st) if v in last); ov = 0
+    for i, v in enumerate(order):
+        op, a, b = rec[v]
+        dying = sum(1 for x in {a, b} if last.get(x) == i)
+        peak = live - dying + 1
+        if peak > R: ov += peak - R
+        live = live - dying + (1 if last.get(v, -1) > i else 0)
+    return ov
+
+def anneal_fit(rec, order, st, R=48, iters=20000, seed=0):
+    """Sırayı rastgele geçerli taşımalarla değiştirerek register taşmasını sıfırla (yerel arama)."""
+    import random
+    rng = random.Random(seed)
+    order = list(order); cur = overflow(rec, order, st, R)
+    users = collections.defaultdict(set)
+    for v in order:
+        op, a, b = rec[v]; users[a].add(v); users[b].add(v)
+    for it in range(iters):
+        if cur == 0: return order
+        pos = {v: i for i, v in enumerate(order)}
+        v = rng.choice(order); i = pos[v]
+        op, a, b = rec[v]
+        lo = max([pos[x] for x in (a, b) if x in pos], default=-1) + 1
+        hi = min([pos[u] for u in users[v]], default=len(order)) - 1
+        if hi <= lo: continue
+        j = rng.randint(lo, hi)
+        if j == i: continue
+        o2 = order[:i] + order[i+1:]
+        o2.insert(j if j < i else j, v) if j < i else o2.insert(j, v)
+        new = overflow(rec, o2, st, R)
+        if new <= cur or rng.random() < 0.02:
+            order, cur = o2, new
+    return order if cur == 0 else None
+
 def fit(rec, order, st, tg, L, tries=FITT):
     """Sırayı 48 register'a sığdır: önce olduğu gibi, sonra liste zamanlayıcı (birkaç rastgele deneme)."""
     import random
@@ -176,6 +216,14 @@ def apply_one(st, tg, L, rec, order, sav):
     for rec2, o in tries[:FITN]:
         r = fit(rec2, o, st, tg, L)
         if r: return rec2, r[0]
+    if ANNEAL:
+        tries.sort(key=lambda t: overflow(t[0], t[1], st))
+        for k, (rec2, o) in enumerate(tries[:ANNEAL]):
+            o2 = anneal_fit(rec2, o, st, iters=ANNIT, seed=k)
+            if o2:
+                vops = [(rec2[v][0], rec2[v][1], rec2[v][2], v) for v in o2]
+                prog = allocate(vops, st)
+                if prog is not None and run(prog, st, tg, L)[0]: return rec2, o2
     return None
 
 def materialize(st, tg, L, rec, order):

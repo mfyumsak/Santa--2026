@@ -4,6 +4,7 @@ Uygulama/doğrulama yerelde cone/apply_sav.py ile yapılır."""
 import os, sys, csv, json, subprocess, time, shutil
 from pathlib import Path
 csv.field_size_limit(10**9)
+ALLOW_EQ = "0"  # 1: eşit uzunlukta alternatifleri de yaz (LNS zinciri için)
 T0 = time.time(); BUDGET = float(os.environ.get("BUDGET", 3.3 * 3600))
 INP = Path("/kaggle/input"); WORK = Path("/kaggle/working")
 
@@ -90,7 +91,7 @@ for g in range(ng):
     with open(qf, "w") as f:
         for i, (_, line) in enumerate(Q):
             if i % ng == g: f.write(line + "\n")
-    env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(g), ALLOW_EQ="0")
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(g), ALLOW_EQ=ALLOW_EQ)
     log = open(WORK / f"log{g}.txt", "w")
     procs.append(subprocess.Popen([sys.executable, str(AG / "cone.py"), str(qf), str(WORK / f"sav{g}.txt"), "5", "99"],
                                   cwd=str(AG), env=env, stdout=log, stderr=subprocess.STDOUT))
@@ -102,6 +103,8 @@ while any(p.poll() is None for p in procs):
         break
     time.sleep(30)
 n = sum(1 for g in range(ng) if (WORK / f"sav{g}.txt").exists() for l in open(WORK / f"sav{g}.txt") if "SAVING" in l)
+ne = sum(1 for g in range(ng) if (WORK / f"sav{g}.txt").exists() for l in open(WORK / f"sav{g}.txt") if "EQUAL" in l)
+print("EQUAL lines", ne, flush=True)
 print("SAVING lines", n, "elapsed", round(time.time() - T0), flush=True)
 for g in range(ng):
     print(f"--- log{g} tail ---"); print("".join(open(WORK / f"log{g}.txt").readlines()[-5:]), flush=True)

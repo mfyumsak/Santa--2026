@@ -42,7 +42,7 @@ if __name__ == "__main__":
     min_nr = int(sys.argv[4]) if len(sys.argv) > 4 else 5
     out = open(sys.argv[3], "w"); n = 0
     for r in csv.DictReader(open(sys.argv[2])):
-        p = P[r["id"]]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
+        p = P[r["id"].split("@")[0]]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
         rec, order, users = dag(json.loads(r["program"]), st)
         idx = {v: i for i, v in enumerate(order)}
         stset, tgset = set(st), set(tg)

@@ -74,6 +74,10 @@ for r in csv.DictReader(open(BEST)):
         if len(c) < 5: continue
         base = sorted(allv - c - desc_of(T, users))
         Q.append((len(c), f"{r['id']} {T} {len(c)} {L} {len(base)} " + " ".join(map(str, base))))
+QF = sorted(INP.rglob("cone_queries.txt"))
+if QF and os.environ.get("USE_QF", "1") == "1":
+    Q = [(int(l.split()[2]), l.rstrip("\n")) for l in open(QF[0]) if l.strip()]
+    print("hazır sorgu dosyası:", QF[0], flush=True)
 Q.sort(key=lambda x: -x[0])
 print("queries", len(Q), flush=True)
 

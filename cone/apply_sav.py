@@ -11,6 +11,8 @@ csv.field_size_limit(10**9)
 import os
 EQ = int(os.environ.get('EQ_OK', '0'))
 STRAT = 0
+FITN = int(os.environ.get('FITN', '40'))
+FITT = int(os.environ.get('FITT', '6'))
 
 def derive_all(v, S, L):
     res = []
@@ -38,7 +40,90 @@ def topo(rec, key):
             if cnt[u] == 0: heapq.heappush(h, (key[u], u))
     return out if len(out) == len(rec) else None
 
+def list_sched(rec, order, st, R=48, jitter=0.0, rng=None, slack=2):
+    """Register baskısını gözeten liste zamanlayıcı: canlı değer sayısı R'yi aşmayacak topolojik sıra (yoksa None)."""
+    key = {v: i + (rng.random() * jitter if rng else 0) for i, v in enumerate(order)}
+    cons = collections.Counter(); users = collections.defaultdict(list); deps = {}
+    stset = set(st)
+    for v in order:
+        op, a, b = rec[v]; ops = {a, b}
+        for x in ops: cons[x] += 1; users[x].append(v)
+        deps[v] = len([x for x in ops if x in rec])
+    rem = dict(cons)
+    live = {v for v in stset if rem.get(v, 0) > 0}
+    ready = {v for v in order if deps[v] == 0}
+    out = []
+    while ready:
+        best = None
+        for v in ready:
+            op, a, b = rec[v]
+            dying = sum(1 for x in {a, b} if rem[x] == 1)
+            during = len(live) - dying + 1
+            if during > R: continue
+            delta = (1 if cons.get(v, 0) > 0 else 0) - dying
+            sc = (delta, key[v]) if len(live) >= R - slack else (0, key[v])
+            if best is None or sc < best[0]: best = (sc, v)
+        if best is None: return None
+        v = best[1]; ready.discard(v); out.append(v)
+        op, a, b = rec[v]
+        for x in {a, b}:
+            rem[x] -= 1
+            if rem[x] == 0: live.discard(x)
+        if cons.get(v, 0) > 0: live.add(v)
+        for u in users[v]:
+            deps[u] -= 1
+            if deps[u] == 0: ready.add(u)
+    return out if len(out) == len(order) else None
+
+def rev_sched(rec, order, st, R=48, jitter=0.0, rng=None, slack=2):
+    """Sondan başa liste zamanlayıcı: canlı küme L (ileri yönde 'sonra kullanılacak' değerler)."""
+    key = {v: i + (rng.random() * jitter if rng else 0) for i, v in enumerate(order)}
+    users = collections.defaultdict(set)
+    for v in order:
+        op, a, b = rec[v]
+        users[a].add(v); users[b].add(v)
+    left = {v: len(users[v]) for v in order}   # henüz zamanlanmamış kullanıcı sayısı
+    ready = {v for v in order if left[v] == 0}
+    L = set(); out = []
+    while ready:
+        best = None
+        for v in ready:
+            op, a, b = rec[v]
+            Lm = L - {v}
+            live_in = Lm | {a, b}
+            if len(live_in) > R or len(Lm) + 1 > R: continue
+            delta = len(live_in) - len(L)
+            sc = (delta, -key[v]) if len(L) >= R - slack else (0, -key[v])
+            if best is None or sc < best[0]: best = (sc, v)
+        if best is None: return None
+        v = best[1]; ready.discard(v); out.append(v)
+        op, a, b = rec[v]
+        L.discard(v); L |= {a, b}
+        for x in {a, b}:
+            if x in left:
+                left[x] -= 1
+                if left[x] == 0: ready.add(x)
+    if len(out) != len(order): return None
+    if len(L) > R: return None
+    return out[::-1]
+
+def fit(rec, order, st, tg, L, tries=FITT):
+    """Sırayı 48 register'a sığdır: önce olduğu gibi, sonra liste zamanlayıcı (birkaç rastgele deneme)."""
+    import random
+    for t in range(tries + 1):
+        if t == 0: o = order
+        else: o = list_sched(rec, order, st, jitter=0 if t == 1 else 4.0 * (t % 10), rng=random.Random(t) if t > 1 else None, slack=1 + t % 7)
+        os_ = [o, rev_sched(rec, order, st, jitter=0 if t <= 1 else 4.0 * (t % 10), rng=random.Random(1000 + t) if t > 1 else None, slack=1 + t % 7)]
+        for o in os_:
+            if o is None: continue
+            vops = [(rec[v][0], rec[v][1], rec[v][2], v) for v in o]
+            prog = allocate(vops, st)
+            if prog is not None and run(prog, st, tg, L)[0]: return o, prog
+    return None
+
 def apply_one(st, tg, L, rec, order, sav):
+    """Koniyi değiştir; yeni bloğu 48 register'a sığacak bir sıra bul. (rec2, order2) ya da None."""
+    import random
     stset, tgset = set(st), set(tg)
     users = {}
     for r in order:
@@ -51,31 +136,47 @@ def apply_one(st, tg, L, rec, order, sav):
     if len(new) + 1 >= len(c) + EQ: return None
     d = desc_of(T, users)
     if any(v in d for v in new): return None
-    base = (set(order) | stset) - c - d
-    pos = {v: idx[v] for v in base if v in idx}
+    kept = [v for v in order if v not in c]
+    base = (set(kept) | stset) - d
+    last = {}
+    for i, v in enumerate(order):
+        if v in c: continue
+        op, a, b = rec[v]; last[a] = i; last[b] = i
+    pos = {v: idx[v] for v in kept}
     for v in stset: pos[v] = -1
-    known = set(base); rem = list(new) + [T]; nrec = {}
-    while rem:
-        prog = False
-        for v in list(rem):
-            if v in known and v != T: rem.remove(v); prog = True; continue
-            S = known - {T}
-            if v in rec and v != T and rec[v][1] in S and rec[v][2] in S: r = rec[v]
-            else:
-                D = derive_all(v, S, L)
-                r = min(D, key=lambda t: (max(pos[t[1]], pos[t[2]]), pos[t[1]] + pos[t[2]])) if D else None
-            if r:
-                nrec[v] = r; known.add(v); rem.remove(v); prog = True
-                pos[v] = max(pos[r[1]], pos[r[2]]) + 0.001
-        if not prog: return None
-    rec2 = {v: rec[v] for v in rec if v not in c}
-    key = {v: idx[v] for v in rec2}
-    for j, v in enumerate(nrec):
-        rec2[v] = nrec[v]
-        key[v] = (pos[v] if STRAT == 1 else idx[T] - 1 + (j + 1) / (len(nrec) + 1))
-    key[T] = max(idx[T], pos[T]) if STRAT != 1 else pos[T]
-    o = topo(rec2, key)
-    return (rec2, o) if o else None
+    rng = random.Random(len(new) * 7919 + T % 1000)
+    variants = []
+    for mode in range(6):
+        blk = {}; rem = [x for x in new if x not in base] + [T]
+        while rem:
+            prog = False
+            for v in list(rem):
+                D = derive_all(v, (base | set(blk)) - {T}, L)
+                if not D: continue
+                if mode == 0: r = min(D, key=lambda t: (max(pos.get(t[1], -1), pos.get(t[2], -1))))
+                elif mode == 1: r = max(D, key=lambda t: (min(last.get(t[1], 10**9) if t[1] not in blk else 10**9, last.get(t[2], 10**9) if t[2] not in blk else 10**9)))
+                else: r = rng.choice(D)
+                blk[v] = r; rem.remove(v); prog = True
+            if not prog: break
+        if rem: continue
+        if blk not in variants: variants.append(blk)
+    if not variants: return None
+    tries = []
+    for blk in variants:
+        rec2 = {v: rec[v] for v in kept}; rec2.update(blk)
+        for q in sorted({idx[T] - 0.5, 0.5} | {i + 0.5 for i in range(0, len(order), max(1, len(order) // 12))}, reverse=True):
+            key = {v: idx[v] for v in kept}
+            for j, v in enumerate(blk): key[v] = q + j * 1e-3
+            o = topo(rec2, key)
+            if o: tries.append((rec2, o))
+    for rec2, o in tries:
+        vops = [(rec2[v][0], rec2[v][1], rec2[v][2], v) for v in o]
+        prog = allocate(vops, st)
+        if prog is not None and run(prog, st, tg, L)[0]: return rec2, o
+    for rec2, o in tries[:FITN]:
+        r = fit(rec2, o, st, tg, L)
+        if r: return rec2, r[0]
+    return None
 
 def materialize(st, tg, L, rec, order):
     vops = [(rec[v][0], rec[v][1], rec[v][2], v) for v in order]
@@ -97,10 +198,9 @@ if __name__ == "__main__":
             S[w[0]].append((int(w[3]) - int(w[w.index("emitted") + 1]), T, new))
     gain = 0; nwin = 0
     for pid, lst in S.items():
-        p = P[pid]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
+        p = P[pid.split("@")[0]]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
         bestp = None; bestapp = 0
-        for strat in (0, 1):
-            STRAT = strat
+        for strat in (0,):
             rec, order, _ = dag(best[pid], st)
             applied = 0
             for g, T, new in sorted(lst, key=lambda x: -x[0]):
@@ -115,5 +215,5 @@ if __name__ == "__main__":
             print(pid, len(best[pid]), "->", len(prog), "applied", bestapp, flush=True)
             best[pid] = prog
     w = csv.writer(open(sys.argv[3], "w", newline="")); w.writerow(["id", "program"])
-    for pid in sorted(P): w.writerow([pid, json.dumps(best[pid], separators=(",", ":"))])
+    for pid in sorted(best): w.writerow([pid, json.dumps(best[pid], separators=(",", ":"))])
     print("puzzles", nwin, "gain", gain, "score", sum(map(len, best.values())))

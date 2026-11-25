@@ -52,3 +52,9 @@
 - Otomatik hat 2026-11-24 16:47 UTC: 128,317 (sıra 177/2888, lider 125,289). LNS kernelleri hâlâ çalışıyor.
 - 2026-11-24 (gece): gizli DAG-LNS kernel 1 bitti: 9 saat, 5 tur x 1000 bulmaca x 30 sn, 0 iyileşme (motor doğru çalıştı, 'strict 0'). Public sınır bu motorla zaten cilalı. Yeniden başlatma kapatıldı (lns_cycle.sh, LNS_CYCLE=1 ile açılır); kernel 2'nin çıktısı bitince yine birleştirilecek.
 - Otomatik hat 2026-11-25 06:48 UTC: 128,239 (sıra 218/2988, lider 124,995). LNS kernel 2 de 0 (7 tur).
+
+## 2026-11-25 Sızan tkm2261 dataset'leri (nagiss/ag-santa2026-exp8d-w21..w28)
+- İçerik: q_shard*.txt = koni-arama SORGU girdileri (pid T nR L nb base...), sonuç değil; + ag_gpu_factor_cone_v4.py (GPU), ag_factor_helper_v2.cpp.
+- Sorgulardan program uzunluğu çıkarıldı (tüm hedefleri kapsayan sorgu: |base−başlangıç| + nR): 280 bulmaca, 50 eşit, 230 daha uzun, 0 daha kısa → doğrudan kazanç yok.
+- Yöntem: her düğüm T için özel koniyi (nR≥5) çarpımsal kalıplarla nR−1 adımda yeniden kurmayı dener (F4F, F10, F3E1). Bizim resynth en fazla 3 adım.
+- Hazırlandı: cone/gen_queries.py (bizim programlardan 3.377 sorgu), cone/apply_sav.py (SAVING uygula + register + doğrula; sahte EQUAL testinde 30'dan 27'si aynı uzunlukta geri kuruldu), kaggle_cone/ (T4x2 özel kernel; GPU onayı bekleniyor).

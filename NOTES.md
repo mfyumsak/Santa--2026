@@ -58,3 +58,13 @@
 - Sorgulardan program uzunluğu çıkarıldı (tüm hedefleri kapsayan sorgu: |base−başlangıç| + nR): 280 bulmaca, 50 eşit, 230 daha uzun, 0 daha kısa → doğrudan kazanç yok.
 - Yöntem: her düğüm T için özel koniyi (nR≥5) çarpımsal kalıplarla nR−1 adımda yeniden kurmayı dener (F4F, F10, F3E1). Bizim resynth en fazla 3 adım.
 - Hazırlandı: cone/gen_queries.py (bizim programlardan 3.377 sorgu), cone/apply_sav.py (SAVING uygula + register + doğrula; sahte EQUAL testinde 30'dan 27'si aynı uzunlukta geri kuruldu), kaggle_cone/ (T4x2 özel kernel; GPU onayı bekleniyor).
+- GPU tur 1 (T4x2, 13 dk, 3.377 sorgu): 5 SAVING (F4F×3, F10×2). Programlar 48 register sınırında; vio.allocate hepsini reddetti. apply_sav.py'ye konum taraması + liste zamanlayıcı + ters (sondan başa) liste zamanlayıcı eklendi → 0470 (249→248) ve 0087 (236→235) sığdı; 0655/0020/0321 sığmadı.
+- 08:19 UTC 128.238 gönderildi; 08:29 UTC 128.237 (sıra 245/2995, lider 124.974). 128.238'de 26 takım beraberdi.
+- GPU tur 2: eşit uzunluktaki 537 alternatif public program (1.798 sorgu).
+- GPU tur 2 (537 eşit uzunlukta public alternatif, 7 dk): 1 SAVING (0655 alternatifte sığdı) → 128.236 (sıra 224/2995).
+- GPU tur 3 (kendi en iyi, ALLOW_EQ=1, 19 dk): 4.318 EQUAL, 2 SAVING (0020, 0321). combo.py: önce bir EQUAL hamlesi, sonra SAVING → 0321 sığdı (265→264). 128.235 (09:49 UTC, sıra 226/3010). 0020 42 EQUAL ile de sığmadı.
+- GPU tur 4: 613 EQ-alternatif program (eq_alts.py K=2), 6.168 sorgu.
+- GPU tur 4 (613 EQ-alt program, 6.168 sorgu, 25 dk): 4 SAVING; 0834 sığdı (206→205) → 128.234 (11:23 UTC). 0020, 0285 combo ile de sığmadı.
+- Kaggle CLI 2.2.5 ile tartışmalar okunabiliyor: `kaggle competitions topics list santa-2026 -s new`, `kaggle competitions topics show <id>`.
+- update.sh: tek turda >400 kazanç → HOLD (otomatik gönderim yok, candidate_sources.txt ile kaynak incelemesi). Amin'in sızan 127.539 dosyası kullanılmamalı.
+- GPU tur 5: EQ-alt programlarda ALLOW_EQ=1 (zincirin 2. adımı için EQUAL + SAVING).

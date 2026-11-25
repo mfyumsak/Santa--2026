@@ -16,9 +16,9 @@ for f in sys.argv[4:]:
         elif "EQUAL" in w: EQL[w[0]].append((int(w[1]), list(map(int, w[w.index("new") + 1:]))))
 gain = 0
 for pid, svs in SV.items():
-    p = P[pid]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
+    p = P[pid.split("@")[0]]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
     done = False
-    for Te, ne in EQL.get(pid, []):
+    for Te, ne in EQL.get(pid, []) + EQL.get(pid.split("@")[0], []):
         rec, order, _ = dag(best[pid], st)
         A.EQ = 1
         r = A.apply_one(st, tg, L, rec, order, (Te, ne))
@@ -32,7 +32,7 @@ for pid, svs in SV.items():
                 print(pid, len(best[pid]), "->", len(prog), "via EQ at", Te, flush=True)
                 gain += len(best[pid]) - len(prog); best[pid] = prog; done = True; break
         if done: break
-    if not done: print(pid, "sığmadı;", len(EQL.get(pid, [])), "EQUAL denendi", flush=True)
+    if not done: print(pid, "sığmadı;", len(EQL.get(pid, [])) + len(EQL.get(pid.split("@")[0], [])), "EQUAL denendi", flush=True)
 w = csv.writer(open(sys.argv[3], "w", newline="")); w.writerow(["id", "program"])
-for pid in sorted(P): w.writerow([pid, json.dumps(best[pid], separators=(",", ":"))])
+for pid in sorted(best): w.writerow([pid, json.dumps(best[pid], separators=(",", ":"))])
 print("gain", gain, "score", sum(map(len, best.values())))

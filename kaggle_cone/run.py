@@ -4,7 +4,7 @@ Uygulama/doğrulama yerelde cone/apply_sav.py ile yapılır."""
 import os, sys, csv, json, subprocess, time, shutil
 from pathlib import Path
 csv.field_size_limit(10**9)
-ALLOW_EQ = "1"  # 1: eşit uzunlukta alternatifleri de yaz (LNS zinciri için)
+ALLOW_EQ = "0"  # 1: eşit uzunlukta alternatifleri de yaz (LNS zinciri için)
 T0 = time.time(); BUDGET = float(os.environ.get("BUDGET", 3.3 * 3600))
 INP = Path("/kaggle/input"); WORK = Path("/kaggle/working")
 

@@ -72,3 +72,7 @@
 - GPU tur 6 (gen2: gen1'e ikinci EQ hamlesi, 384 yeni program, 3.874 sorgu, 15 dk): 7 SAVING, 4 yeni bulmaca (0031, 0207, 0491, 0956) → 128.230 (12:59 UTC).
 - Ders: EQ zinciri (LNS) derinleştikçe verim artıyor. Bir nesil için tek ALLOW_EQ=1 çalıştırması hem SAVING hem sonraki nesil EQUAL'ları verir.
 - GPU tur 7: gen2b (gen1 programlarına farklı EQ hamleleri, 510 program, 6.181 sorgu).
+- GPU tur 7 (gen2b, 510 program, 25 dk): 13 SAVING; yeni olan yalnız 0328 (207→206) → 128.229 (14:27 UTC). 0834@f1@f2'de iki SAVING var ama ikisi birlikte sığmıyor.
+- GPU tur 8 (12 "sıcak" bulmacanın 85 programı, ALLOW_EQ=1, 9 dk): 25 SAVING, hepsi daha önce bulunanların tekrarı; mevcut en iyi programlarda yeni kısaltma yok (0020 hâlâ sığmıyor). 2.102 EQUAL saklandı (coneout8).
+- Zincir durduruldu. GPU toplamı ~2 sa 45 dk. Kazanç: 128.239 → 128.229 (10 talimat, 10 bulmaca).
+- Kalan kaldıraç: 48-register sığdırma (0020, 0285 ve 0834'ün ikinci kısaltması bulunmuş ama sığmıyor).

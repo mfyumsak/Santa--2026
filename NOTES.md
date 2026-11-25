@@ -51,3 +51,4 @@
 - 2026-11-24: furkan onayıyla Kaggle hesabında gizli DAG-LNS çalıştırması kuruldu (kaggle_lns/run.py, dataset mfurkanyumsak/santa2026-best-programs, kernel mfurkanyumsak/santa2026-dag-lns-private). pipeline/lns_cycle.sh bitince yeniden başlatır; update.sh çıktısını birleştirir.
 - Otomatik hat 2026-11-24 16:47 UTC: 128,317 (sıra 177/2888, lider 125,289). LNS kernelleri hâlâ çalışıyor.
 - 2026-11-24 (gece): gizli DAG-LNS kernel 1 bitti: 9 saat, 5 tur x 1000 bulmaca x 30 sn, 0 iyileşme (motor doğru çalıştı, 'strict 0'). Public sınır bu motorla zaten cilalı. Yeniden başlatma kapatıldı (lns_cycle.sh, LNS_CYCLE=1 ile açılır); kernel 2'nin çıktısı bitince yine birleştirilecek.
+- Otomatik hat 2026-11-25 06:48 UTC: 128,239 (sıra 218/2988, lider 124,995). LNS kernel 2 de 0 (7 tur).

@@ -76,3 +76,4 @@
 - GPU tur 8 (12 "sıcak" bulmacanın 85 programı, ALLOW_EQ=1, 9 dk): 25 SAVING, hepsi daha önce bulunanların tekrarı; mevcut en iyi programlarda yeni kısaltma yok (0020 hâlâ sığmıyor). 2.102 EQUAL saklandı (coneout8).
 - Zincir durduruldu. GPU toplamı ~2 sa 45 dk. Kazanç: 128.239 → 128.229 (10 talimat, 10 bulmaca).
 - Kalan kaldıraç: 48-register sığdırma (0020, 0285 ve 0834'ün ikinci kısaltması bulunmuş ama sığmıyor).
+- 15:58 UTC: yeni public birleşim (vigneshsankar1962 "128k sota frontier synthesis portfolio", superparis fork) + bizim 10 GPU kazancı → 128.164, sıra 195/3053 (lider 124.881). Öncesinde 128.229 ile sıra 550'ye düşmüştük.

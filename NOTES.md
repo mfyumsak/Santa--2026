@@ -68,3 +68,7 @@
 - Kaggle CLI 2.2.5 ile tartışmalar okunabiliyor: `kaggle competitions topics list santa-2026 -s new`, `kaggle competitions topics show <id>`.
 - update.sh: tek turda >400 kazanç → HOLD (otomatik gönderim yok, candidate_sources.txt ile kaynak incelemesi). Amin'in sızan 127.539 dosyası kullanılmamalı.
 - GPU tur 5: EQ-alt programlarda ALLOW_EQ=1 (zincirin 2. adımı için EQUAL + SAVING).
+- GPU tur 5 (gen1 EQ-alt, ALLOW_EQ=1, 36 dk): tur 4 ile aynı 4 SAVING + 8.319 EQUAL; 0020/0285 combo ile de sığmadı.
+- GPU tur 6 (gen2: gen1'e ikinci EQ hamlesi, 384 yeni program, 3.874 sorgu, 15 dk): 7 SAVING, 4 yeni bulmaca (0031, 0207, 0491, 0956) → 128.230 (12:59 UTC).
+- Ders: EQ zinciri (LNS) derinleştikçe verim artıyor. Bir nesil için tek ALLOW_EQ=1 çalıştırması hem SAVING hem sonraki nesil EQUAL'ları verir.
+- GPU tur 7: gen2b (gen1 programlarına farklı EQ hamleleri, 510 program, 6.181 sorgu).

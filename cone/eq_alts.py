@@ -19,7 +19,7 @@ for f in sys.argv[5:]:
 rng = random.Random(1)
 out = csv.writer(open(sys.argv[3], "w", newline="")); out.writerow(["id", "program"]); n = 0
 for pid, lst in E.items():
-    p = P[pid]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
+    p = P[pid.split("@")[0]]; st = json.loads(p["starting_values"]); tg = json.loads(p["targets"]); L = int(p["value_limit"])
     rng.shuffle(lst); seenT = set(); k = 0
     for T, new in lst:
         if k >= K: break

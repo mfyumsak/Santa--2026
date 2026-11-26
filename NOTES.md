@@ -78,3 +78,4 @@
 - Kalan kaldıraç: 48-register sığdırma (0020, 0285 ve 0834'ün ikinci kısaltması bulunmuş ama sığmıyor).
 - 15:58 UTC: yeni public birleşim (vigneshsankar1962 "128k sota frontier synthesis portfolio", superparis fork) + bizim 10 GPU kazancı → 128.164, sıra 195/3053 (lider 124.881). Öncesinde 128.229 ile sıra 550'ye düşmüştük.
 - 2026-11-25 16:49 UTC (19:40 rutin): 128.151, sıra 185/3062 (lider 124.840). Yeni kaynaklar: ozertuu multi-engine frontier notebook (8 bulmaca), goodpjw2008 public_frontier dataset (2). Yeni tartışma yok. Yorum sayısı tabanı: /mnt/project-files/santa2026/topic_counts.csv (sonraki taramada yeni yorumlu konuları bulmak için).
+- 2026-11-26 06:48 UTC (09:40 rutin): 128.021, sıra 266/3134 (lider 124.614). Kaynaklar: viktorbarbarich value-graph LNS C++ notebook (45), bytetraveller 128.051 frontier (33), ozertuu multi-engine (16). Tartışma: yeni önemli bir şey yok (hengck23 LEAN alt sınır konusu, Nir Aberman konusuna sohbet yorumları).
